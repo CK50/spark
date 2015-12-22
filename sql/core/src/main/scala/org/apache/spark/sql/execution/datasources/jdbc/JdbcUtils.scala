@@ -62,15 +62,11 @@ object JdbcUtils extends Logging {
   /**
    * Returns a PreparedStatement that inserts a row into table via conn.
    */
-  def insertStatement(conn: Connection, table: String, rddSchema: StructType): PreparedStatement = {
-    val sql = new StringBuilder(s"INSERT INTO $table VALUES (")
-    var fieldsLeft = rddSchema.fields.length
-    while (fieldsLeft > 0) {
-      sql.append("?")
-      if (fieldsLeft > 1) sql.append(", ") else sql.append(")")
-      fieldsLeft = fieldsLeft - 1
-    }
-    conn.prepareStatement(sql.toString())
+    val sql = rddSchema.fields.map(field => field.name)
+                       .mkString(s"INSERT INTO $table ( ", ", ", " ) " ) +
+              rddSchema.fields.map(field => "?")
+                       .mkString("VALUES ( ", ", ", " )" )
+    conn.prepareStatement(sql)
   }
 
   /**
